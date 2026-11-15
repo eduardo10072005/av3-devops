@@ -1,0 +1,72 @@
+"""Testes de integração: precisam de um PostgreSQL acessível em AIVEN_DB_URL.
+No GitHub Actions, o workflow sobe um PostgreSQL de teste automaticamente."""
+
+import os
+import sys
+
+import pytest
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+
+pytestmark = pytest.mark.skipif(
+    not os.environ.get("AIVEN_DB_URL"), reason="AIVEN_DB_URL não definida"
+)
+
+
+@pytest.fixture()
+def client():
+    import app as app_module
+    import db
+
+    db.ensure_schema()
+    with db.get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute("TRUNCATE itens RESTART IDENTITY;")
+    app_module.app.config["TESTING"] = True
+    return app_module.app.test_client()
+
+
+def test_healthz_ok(client):
+    resp = client.get("/healthz")
+    assert resp.status_code == 200
+    assert resp.get_json()["status"] == "ok"
+
+
+def test_crud_completo(client):
+    # criar
+    resp = client.post("/itens", data={"titulo": "Primeiro", "descricao": "teste"})
+    assert resp.status_code == 302
+
+    # listar
+    dados = client.get("/api/itens").get_json()
+    assert len(dados) == 1
+    assert dados[0]["titulo"] == "Primeiro"
+    item_id = dados[0]["id"]
+    assert client.get("/").status_code == 200
+    assert client.get(f"/itens/{item_id}/editar").status_code == 200
+
+    # editar
+    resp = client.post(f"/itens/{item_id}", data={"titulo": "Alterado", "descricao": "ok"})
+    assert resp.status_code == 302
+    assert client.get("/api/itens").get_json()[0]["titulo"] == "Alterado"
+
+    # excluir
+    resp = client.post(f"/itens/{item_id}/excluir")
+    assert resp.status_code == 302
+    assert client.get("/api/itens").get_json() == []
+
+
+def test_titulo_obrigatorio(client):
+    resp = client.post("/itens", data={"titulo": "   "})
+    assert resp.status_code == 400
+
+
+def test_item_inexistente(client):
+    assert client.get("/itens/9999/editar").status_code == 404
+    assert client.post("/itens/9999/excluir").status_code == 404
+
+
+def test_healthz_sem_banco(client, monkeypatch):
+    monkeypatch.setenv("AIVEN_DB_URL", "postgres://x:y@127.0.0.1:1/nada")
+    resp = client.get("/healthz")
+    assert resp.status_code == 503
