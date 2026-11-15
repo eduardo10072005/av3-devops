@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Editar item #{{ item.id }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main>
+    <h1>Editar item #{{ item.id }}</h1>
+    <form method="post" action="{{ url_for('atualizar', item_id=item.id) }}" class="card">
+      <label>Título <input name="titulo" required maxlength="120" value="{{ item.titulo }}"></label>
+      <label>Descrição <textarea name="descricao" rows="3" maxlength="500">{{ item.descricao }}</textarea></label>
+      <button type="submit">Salvar</button>
+      <a href="{{ url_for('index') }}">Cancelar</a>
+    </form>
+  </main>
+</body>
+</html>
