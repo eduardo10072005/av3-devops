@@ -13,9 +13,15 @@ provider "aiven" {
   api_token = var.aiven_api_token
 }
 
-# Serviço PostgreSQL gerenciado (plano gratuito: veja o nome do plano no console da Aiven)
+# Cria o projeto dentro da organização existente
+resource "aiven_project" "project" {
+  project   = var.aiven_project
+  parent_id = "org5f7d471a8f0"
+}
+
+# Serviço PostgreSQL gerenciado
 resource "aiven_pg" "db" {
-  project      = var.aiven_project
+  project      = aiven_project.project.project
   cloud_name   = var.cloud_name
   plan         = var.pg_plan
   service_name = var.service_name
@@ -23,17 +29,14 @@ resource "aiven_pg" "db" {
 
 # Database da aplicação dentro do serviço
 resource "aiven_pg_database" "app" {
-  project       = var.aiven_project
+  project       = aiven_project.project.project
   service_name  = aiven_pg.db.service_name
   database_name = var.database_name
 }
 
-# Usuário adicional (prática de gestão de acesso).
-# Atenção: no PostgreSQL 15+ um usuário novo não pode criar tabelas no schema
-# public, por isso a aplicação deste modelo conecta com o usuário administrador
-# (ver output app_db_uri). Conceder privilégios ao usuário é um desafio extra.
+# Usuário adicional (prática de gestão de acesso)
 resource "aiven_pg_user" "extra" {
-  project      = var.aiven_project
+  project      = aiven_project.project.project
   service_name = aiven_pg.db.service_name
   username     = var.db_username
 }
