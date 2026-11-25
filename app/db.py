@@ -25,11 +25,12 @@ def ensure_schema():
         with conn.cursor() as cur:
             cur.execute(
                 """
-                CREATE TABLE IF NOT EXISTS itens (
+                CREATE TABLE IF NOT EXISTS filmes (
                     id         SERIAL PRIMARY KEY,
                     titulo     TEXT NOT NULL,
-                    descricao  TEXT NOT NULL DEFAULT '',
-                    criado_em  TIMESTAMPTZ NOT NULL DEFAULT now()
+                    ano        INTEGER NOT NULL,
+                    genero     TEXT NOT NULL,
+                    assistido  TEXT NOT NULL
                 );
                 """
             )
@@ -39,7 +40,7 @@ def ensure_schema():
 def listar():
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT id, titulo, descricao, criado_em FROM itens ORDER BY id DESC;")
+            cur.execute("SELECT id, titulo, ano, genero, assistido FROM filmes ORDER BY id DESC;")
             return cur.fetchall()
 
 
@@ -47,28 +48,28 @@ def buscar(item_id):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "SELECT id, titulo, descricao, criado_em FROM itens WHERE id = %s;",
+                "SELECT id, titulo, ano, genero, assistido FROM filmes WHERE id = %s;",
                 (item_id,),
             )
             return cur.fetchone()
 
 
-def criar(titulo, descricao):
+def criar(titulo, ano, genero, assistido):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO itens (titulo, descricao) VALUES (%s, %s) RETURNING id;",
-                (titulo, descricao),
+                "INSERT INTO filmes (titulo, ano, genero, assistido) VALUES (%s, %s, %s, %s) RETURNING id;",
+                (titulo, ano, genero, assistido),
             )
             return cur.fetchone()["id"]
 
 
-def atualizar(item_id, titulo, descricao):
+def atualizar(item_id, titulo, ano, genero, assistido):
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "UPDATE itens SET titulo = %s, descricao = %s WHERE id = %s;",
-                (titulo, descricao, item_id),
+                "UPDATE filmes SET titulo = %s, ano = %s, genero = %s, assistido = %s WHERE id = %s;",
+                (titulo, ano, genero, assistido, item_id),
             )
             return cur.rowcount > 0
 
@@ -76,7 +77,7 @@ def atualizar(item_id, titulo, descricao):
 def excluir(item_id):
     with get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("DELETE FROM itens WHERE id = %s;", (item_id,))
+            cur.execute("DELETE FROM filmes WHERE id = %s;", (item_id,))
             return cur.rowcount > 0
 
 
