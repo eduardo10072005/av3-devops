@@ -21,7 +21,8 @@ def client():
     db.ensure_schema()
     with db.get_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("TRUNCATE itens RESTART IDENTITY;")
+            # Mudamos de 'itens' para 'filmes'
+            cur.execute("TRUNCATE filmes RESTART IDENTITY;")
     app_module.app.config["TESTING"] = True
     return app_module.app.test_client()
 
@@ -34,21 +35,33 @@ def test_healthz_ok(client):
 
 def test_crud_completo(client):
     # criar
-    resp = client.post("/itens", data={"titulo": "Primeiro", "descricao": "teste"})
+    dados_filme = {
+        "titulo": "Matrix",
+        "ano": "1999",
+        "genero": "Ficção",
+        "assistido": "Sim"
+    }
+    resp = client.post("/itens", data=dados_filme)
     assert resp.status_code == 302
 
     # listar
     dados = client.get("/api/itens").get_json()
     assert len(dados) == 1
-    assert dados[0]["titulo"] == "Primeiro"
+    assert dados[0]["titulo"] == "Matrix"
     item_id = dados[0]["id"]
     assert client.get("/").status_code == 200
     assert client.get(f"/itens/{item_id}/editar").status_code == 200
 
     # editar
-    resp = client.post(f"/itens/{item_id}", data={"titulo": "Alterado", "descricao": "ok"})
+    dados_editados = {
+        "titulo": "Matrix Reloaded",
+        "ano": "2003",
+        "genero": "Ficção",
+        "assistido": "Não"
+    }
+    resp = client.post(f"/itens/{item_id}", data=dados_editados)
     assert resp.status_code == 302
-    assert client.get("/api/itens").get_json()[0]["titulo"] == "Alterado"
+    assert client.get("/api/itens").get_json()[0]["titulo"] == "Matrix Reloaded"
 
     # excluir
     resp = client.post(f"/itens/{item_id}/excluir")
@@ -57,7 +70,8 @@ def test_crud_completo(client):
 
 
 def test_titulo_obrigatorio(client):
-    resp = client.post("/itens", data={"titulo": "   "})
+    # Agora testamos o campo vazio com os dados novos
+    resp = client.post("/itens", data={"titulo": "   ", "ano": "1999", "genero": "Ação", "assistido": "Sim"})
     assert resp.status_code == 400
 
 
