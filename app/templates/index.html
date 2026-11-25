@@ -3,18 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Projeto 0 — CRUD com PostgreSQL na Aiven</title>
+  <title>Catálogo de Filmes — CRUD</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <main>
-    <h1>Itens</h1>
-    <p class="sub">Aplicação de exemplo do Projeto 0. Dados guardados no PostgreSQL gerenciado da Aiven.</p>
+    <h1>Catálogo de Filmes</h1>
+    <p class="sub">Gerencie sua lista de filmes favoritos.</p>
 
     <form method="post" action="{{ url_for('criar') }}" class="card">
       <label>Título <input name="titulo" required maxlength="120"></label>
-      <label>Descrição <textarea name="descricao" rows="2" maxlength="500"></textarea></label>
-      <button type="submit">Adicionar</button>
+      <label>Ano <input type="number" name="ano" required min="1900" max="2100"></label>
+      <label>Gênero <input name="genero" required maxlength="50"></label>
+      <label>Assistido 
+        <select name="assistido" required>
+          <option value="Sim">Sim</option>
+          <option value="Não">Não</option>
+        </select>
+      </label>
+      <button type="submit">Adicionar Filme</button>
     </form>
 
     {% if itens %}
@@ -22,9 +29,10 @@
       {% for item in itens %}
       <li class="card">
         <div>
-          <strong>{{ item.titulo }}</strong>
-          {% if item.descricao %}<p>{{ item.descricao }}</p>{% endif %}
-          <small>#{{ item.id }} · {{ item.criado_em.strftime('%d/%m/%Y %H:%M') }}</small>
+          <strong>{{ item.titulo }} ({{ item.ano }})</strong>
+          <p>Gênero: {{ item.genero }}</p>
+          <p>Assistido: {{ item.assistido }}</p>
+          <small>#{{ item.id }}</small>
         </div>
         <div class="acoes">
           <a href="{{ url_for('editar', item_id=item.id) }}">Editar</a>
@@ -36,7 +44,7 @@
       {% endfor %}
     </ul>
     {% else %}
-    <p class="vazio">Nenhum item ainda. Adicione o primeiro acima.</p>
+    <p class="vazio">Nenhum filme cadastrado ainda. Adicione o primeiro acima.</p>
     {% endif %}
   </main>
 </body>
