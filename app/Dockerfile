@@ -1,14 +1,16 @@
-FROM python:3.12-slim
+FROM python:3.10-slim
 
 WORKDIR /app
 
+# Copia os requisitos e instala
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
+# Copia o resto dos arquivos da aplicação
 COPY . .
 
-ENV PORT=8080
-EXPOSE 8080
+# O Render exige que escutemos na porta 10000 por padrão
+EXPOSE 10000
 
-# O Render informa a porta pela variável PORT
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 2 app:app"]
+# Inicia o app usando o Gunicorn
+CMD ["gunicorn", "--bind", "0.0.0.0:10000", "--workers", "2", "app:app"]
