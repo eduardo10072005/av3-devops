@@ -3,16 +3,23 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Editar item #{{ item.id }}</title>
+  <title>Editar Filme #{{ item.id }}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
   <main>
-    <h1>Editar item #{{ item.id }}</h1>
+    <h1>Editar Filme #{{ item.id }}</h1>
     <form method="post" action="{{ url_for('atualizar', item_id=item.id) }}" class="card">
       <label>Título <input name="titulo" required maxlength="120" value="{{ item.titulo }}"></label>
-      <label>Descrição <textarea name="descricao" rows="3" maxlength="500">{{ item.descricao }}</textarea></label>
-      <button type="submit">Salvar</button>
+      <label>Ano <input type="number" name="ano" required min="1900" max="2100" value="{{ item.ano }}"></label>
+      <label>Gênero <input name="genero" required maxlength="50" value="{{ item.genero }}"></label>
+      <label>Assistido 
+        <select name="assistido" required>
+          <option value="Sim" {% if item.assistido == 'Sim' %}selected{% endif %}>Sim</option>
+          <option value="Não" {% if item.assistido == 'Não' %}selected{% endif %}>Não</option>
+        </select>
+      </label>
+      <button type="submit">Salvar Alterações</button>
       <a href="{{ url_for('index') }}">Cancelar</a>
     </form>
   </main>
